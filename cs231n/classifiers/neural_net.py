@@ -75,7 +75,9 @@ class TwoLayerNet(object):
     # Store the result in the scores variable, which should be an array of      #
     # shape (N, C).                                                             #
     #############################################################################
-    pass
+    #pass
+    out1=np.maximum(0,X.dot(W1)+b1)
+    scores=out1.dot(W2)+b2
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
@@ -92,7 +94,14 @@ class TwoLayerNet(object):
     # in the variable loss, which should be a scalar. Use the Softmax           #
     # classifier loss.                                                          #
     #############################################################################
-    pass
+    #pass
+    correct_class_score=scores[np.arange(N),y].reshape(N,1)
+    exp_sum=np.sum(np.exp(scores),axis=1).reshape(N,1)
+    loss=np.sum(np.log(exp_sum)-correct_class_score)
+    loss/=N
+    loss+=0.5*reg*np.sum(W1*W1)+0.5*reg*np.sum(W2*W2)
+    
+    
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
@@ -104,7 +113,25 @@ class TwoLayerNet(object):
     # and biases. Store the results in the grads dictionary. For example,       #
     # grads['W1'] should store the gradient on W1, and be a matrix of same size #
     #############################################################################
-    pass
+    #pass
+    #global gradient of softmax func
+    margin=np.exp(scores)/exp_sum
+    margin[np.arange(N),y]+=-1
+    margin/=N
+    #local gradient of the second layer 
+    dW2=out1.T.dot(margin)
+    dW2+=reg*W2
+    grads['W2']=dW2
+    grads['b2']=np.sum(margin,axis=0)
+    
+    #the global gradient after the first layer
+    margin1=margin.dot(W2.T)
+    margin1[out1<=0]=0
+    #local gradien of the first layer
+    dW1=X.T.dot(margin1)
+    dW1+=reg*W1
+    grads['W1']=dW1
+    grads['b1']=np.sum(margin1,axis=0)
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
@@ -148,7 +175,9 @@ class TwoLayerNet(object):
       # TODO: Create a random minibatch of training data and labels, storing  #
       # them in X_batch and y_batch respectively.                             #
       #########################################################################
-      pass
+      mask=np.random.choice(num_train,batch_size,replace=True)
+      X_batch=X[mask]
+      y_batch=y[mask]
       #########################################################################
       #                             END OF YOUR CODE                          #
       #########################################################################
@@ -163,7 +192,11 @@ class TwoLayerNet(object):
       # using stochastic gradient descent. You'll need to use the gradients   #
       # stored in the grads dictionary defined above.                         #
       #########################################################################
-      pass
+      self.params['W1']-=learning_rate*grads['W1']
+      self.params['W2']-=learning_rate*grads['W2']
+      self.params['b1']-=learning_rate*grads['b1']
+      self.params['b2']-=learning_rate*grads['b2']
+    
       #########################################################################
       #                             END OF YOUR CODE                          #
       #########################################################################
@@ -208,7 +241,9 @@ class TwoLayerNet(object):
     ###########################################################################
     # TODO: Implement this function; it should be VERY simple!                #
     ###########################################################################
-    pass
+    out1=np.maximum(0,X.dot(self.params['W1'])+self.params['b1'])
+    y_pred=np.argmax(out1.dot(self.params['W2'])+self.params['b2'],axis=1)
+    
     ###########################################################################
     #                              END OF YOUR CODE                           #
     ###########################################################################
